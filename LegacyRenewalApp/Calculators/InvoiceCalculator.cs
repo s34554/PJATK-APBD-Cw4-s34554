@@ -1,6 +1,7 @@
-﻿using LegacyRenewalApp.Models;
+﻿using LegacyRenewalApp.Interfaces;
+using LegacyRenewalApp.Models;
 
-namespace LegacyRenewalApp.Interfaces;
+namespace LegacyRenewalApp.Calculators;
 
 public class InvoiceCalculator : IInvoiceCalculator
 {
