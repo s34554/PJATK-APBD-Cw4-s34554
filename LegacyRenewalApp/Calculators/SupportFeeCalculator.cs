@@ -7,25 +7,15 @@ public class SupportFeeCalculator : ISupportFeeCalculator
 {
     public CalculatorResult Calculate(string planCode, bool includePremiumSupport)
     {
-        var supportFee = 0m;
-        var notes = string.Empty;
-        if (includePremiumSupport)
-        {
-            supportFee = planCode switch
-            {
-                "START" => 250m,
-                "PRO" => 400m,
-                "ENTERPRISE" => 700m,
-                _ => supportFee
-            };
+        if (!includePremiumSupport)
+            return new CalculatorResult();
 
-            notes += "premium support included; ";
-        }
-
-        return new CalculatorResult
+        return planCode switch
         {
-            Amount = supportFee,
-            Notes = notes
+            "START"      => new CalculatorResult { Amount = 250m, Notes = "premium support included; " },
+            "PRO"        => new CalculatorResult { Amount = 400m, Notes = "premium support included; " },
+            "ENTERPRISE" => new CalculatorResult { Amount = 700m, Notes = "premium support included; " },
+            _            => new CalculatorResult { Notes = "premium support included; " }
         };
     }
 }

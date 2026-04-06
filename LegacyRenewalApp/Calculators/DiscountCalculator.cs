@@ -1,4 +1,5 @@
-﻿using LegacyRenewalApp.Interfaces;
+﻿using System;
+using LegacyRenewalApp.Interfaces;
 using LegacyRenewalApp.Models;
 
 namespace LegacyRenewalApp.Calculators;
@@ -13,67 +14,53 @@ public class DiscountCalculator : IDiscountCalculator
         bool isEducationEligible)
     {
         decimal discountAmount = 0;
-        var notes = "";
-        switch (customer.Segment)
-        {
-            case "Silver": 
-                discountAmount += baseAmount * 0.05m;
-                notes += "silver discount; ";
-                break;
-            case "Gold":
-                discountAmount += baseAmount * 0.10m;
-                notes += "gold discount; ";
-                break;
-            case "Platinum":
-                discountAmount += baseAmount * 0.15m;
-                notes += "platinum discount; ";
-                break;
-            case "Education":
-                if (isEducationEligible)
-                {
-                    discountAmount += baseAmount * 0.20m;
-                    notes += "education discount; ";
-                }
-                break;
-        }
+        string notes = "";
+        var segment = ApplySegmentDiscount(baseAmount, customer.Segment, isEducationEligible);
+        var tenure  = ApplyTenureDiscount(baseAmount, customer.YearsWithCompany);
+        var team    = ApplyTeamDiscount(baseAmount, seatCount);
 
-        switch (customer.YearsWithCompany)
-        {
-            case >= 5:
-                discountAmount += baseAmount * 0.07m;
-                notes += "long-term loyalty discount; ";
-                break;
-            case >=2:
-                discountAmount += baseAmount * 0.03m;
-                notes += "basic loyalty discount; ";
-                break;
-        }
+        discountAmount = segment.Amount + tenure.Amount + team.Amount;
+        notes    = segment.Notes + tenure.Notes + team.Notes;
 
-        switch (seatCount)
-        {
-            case >= 50:
-                discountAmount += baseAmount * 0.12m;
-                notes += "large team discount; ";
-                break;
-            case >= 20:
-                discountAmount += baseAmount * 0.08m;
-                notes += "medium team discount; ";
-                break;
-            case >= 10:
-                discountAmount += baseAmount * 0.04m;
-                notes += "small team discount; ";
-                break;
-        }
         if (useLoyaltyPoints && customer.LoyaltyPoints > 0)
         {
-            int pointsToUse = customer.LoyaltyPoints > 200 ? 200 : customer.LoyaltyPoints;
+            int pointsToUse = Math.Min(customer.LoyaltyPoints, 200);
             discountAmount += pointsToUse;
             notes += $"loyalty points used: {pointsToUse}; ";
         }
-        return new CalculatorResult
+
+        return new CalculatorResult { Amount = discountAmount, Notes = notes };
+    }
+    private static CalculatorResult ApplySegmentDiscount(decimal baseAmount, string segment, bool isEducationEligible)
+    {
+        return segment switch
         {
-            Amount = discountAmount,
-            Notes = notes
+            "Silver"    => new CalculatorResult { Amount = baseAmount * 0.05m, Notes = "silver discount; " },
+            "Gold"      => new CalculatorResult { Amount = baseAmount * 0.10m, Notes = "gold discount; " },
+            "Platinum"  => new CalculatorResult { Amount = baseAmount * 0.15m, Notes = "platinum discount; " },
+            "Education" when isEducationEligible
+                => new CalculatorResult { Amount = baseAmount * 0.20m, Notes = "education discount; " },
+            _ => new CalculatorResult()
+        };
+    }
+    private static CalculatorResult ApplyTenureDiscount(decimal baseAmount, int yearsWithCompany)
+    {
+        return yearsWithCompany switch
+        {
+            >= 5 => new CalculatorResult { Amount = baseAmount * 0.07m, Notes = "long-term loyalty discount; " },
+            >= 2 => new CalculatorResult { Amount = baseAmount * 0.03m, Notes = "basic loyalty discount; " },
+            _    => new CalculatorResult()
+        };
+    }
+
+    private static CalculatorResult ApplyTeamDiscount(decimal baseAmount, int seatCount)
+    {
+        return seatCount switch
+        {
+            >= 50 => new CalculatorResult { Amount = baseAmount * 0.12m, Notes = "large team discount; " },
+            >= 20 => new CalculatorResult { Amount = baseAmount * 0.08m, Notes = "medium team discount; " },
+            >= 10 => new CalculatorResult { Amount = baseAmount * 0.04m, Notes = "small team discount; " },
+            _ => new CalculatorResult()
         };
     }
 }

@@ -85,7 +85,6 @@ namespace LegacyRenewalApp
             };
 
             _billingGateway.SaveInvoice(invoice);
-
             _invoiceNotifier.Notify(customer, invoice);
 
             return invoice;
