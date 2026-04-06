@@ -6,34 +6,29 @@ public class PaymentFeeCalculator : IPaymentFeeCalculator
 {
     public CalculatorResult Calculate(decimal amount, string paymentMethod)
     {
-        var paymentFee = 0m;
+        decimal paymentFee;
         var notes = string.Empty;
-        
-        if (paymentMethod == "CARD")
+        switch (paymentMethod)
         {
-            paymentFee = amount * 0.02m;
-            notes += "card payment fee; ";
+            case "CARD":
+                paymentFee = amount * 0.02m;
+                notes += "card payment fee; ";
+                break;
+            case "BANK_TRANSFER":
+                paymentFee = amount * 0.01m;
+                notes += "bank transfer fee; ";
+                break;
+            case "PAYPAL":
+                paymentFee = amount * 0.035m;
+                notes += "paypal fee; ";
+                break;
+            case "INVOICE":
+                paymentFee = 0m;
+                notes += "invoice payment; ";
+                break;
+            default:
+                throw new ArgumentException("Unsupported payment method");
         }
-        else if (paymentMethod == "BANK_TRANSFER")
-        {
-            paymentFee = amount * 0.01m;
-            notes += "bank transfer fee; ";
-        }
-        else if (paymentMethod == "PAYPAL")
-        {
-            paymentFee = amount * 0.035m;
-            notes += "paypal fee; ";
-        }
-        else if (paymentMethod == "INVOICE")
-        {
-            paymentFee = 0m;
-            notes += "invoice payment; ";
-        }
-        else
-        {
-            throw new ArgumentException("Unsupported payment method");
-        }
-
         return new CalculatorResult()
         {
             Amount = paymentFee,

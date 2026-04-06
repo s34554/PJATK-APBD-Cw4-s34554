@@ -4,24 +4,14 @@ public class TaxCalculator : ITaxCalculator
 {
     public CalculatorResult Calculate(decimal taxBase, string country)
     {
-        var taxRate = 0.20m;
-        
-        if (country == "Poland")
+        var taxRate = country switch
         {
-            taxRate = 0.23m;
-        }
-        else if (country == "Germany")
-        {
-            taxRate = 0.19m;
-        }
-        else if (country == "Czech Republic")
-        {
-            taxRate = 0.21m;
-        }
-        else if (country == "Norway")
-        {
-            taxRate = 0.25m;
-        }
+            "Poland" => 0.23m,
+            "Germany" => 0.19m,
+            "Czech Republic" => 0.21m,
+            "Norway" => 0.25m,
+            _ => 0.20m
+        };
 
         var taxAmount = taxBase * taxRate;
 

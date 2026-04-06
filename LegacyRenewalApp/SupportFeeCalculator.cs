@@ -8,18 +8,13 @@ public class SupportFeeCalculator : ISupportFeeCalculator
         var notes = string.Empty;
         if (includePremiumSupport)
         {
-            if (planCode == "START")
+            supportFee = planCode switch
             {
-                supportFee = 250m;
-            }
-            else if (planCode == "PRO")
-            {
-                supportFee = 400m;
-            }
-            else if (planCode == "ENTERPRISE")
-            {
-                supportFee = 700m;
-            }
+                "START" => 250m,
+                "PRO" => 400m,
+                "ENTERPRISE" => 700m,
+                _ => supportFee
+            };
 
             notes += "premium support included; ";
         }
