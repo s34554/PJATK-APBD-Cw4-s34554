@@ -3,6 +3,7 @@ using LegacyRenewalApp.BillingGateways;
 using LegacyRenewalApp.Calculators;
 using LegacyRenewalApp.Interfaces;
 using LegacyRenewalApp.Models;
+using LegacyRenewalApp.Notifiers;
 using LegacyRenewalApp.Repositories;
 
 namespace LegacyRenewalApp
@@ -13,29 +14,34 @@ namespace LegacyRenewalApp
         private readonly ISubscriptionPlanRepository _subscriptionPlanRepository;
         private readonly IInvoiceCalculator _invoiceCalculator;
         private readonly IBillingGateway _billingGateway;
+        private readonly IInvoiceNotifier _invoiceNotifier;
 
         public SubscriptionRenewalService()
-            : this(
-                new CustomerRepository(),
-                new SubscriptionPlanRepository(),
-                new InvoiceCalculator(
-                    new DiscountCalculator(),
-                    new SupportFeeCalculator(),
-                    new PaymentFeeCalculator(),
-                    new TaxCalculator()), 
-                    new BillingGatewayWrapper())
-        { }
+        { 
+            var gateway = new BillingGatewayWrapper();
+            _customerRepository = new CustomerRepository();
+            _subscriptionPlanRepository = new SubscriptionPlanRepository();
+            _invoiceCalculator = new InvoiceCalculator(
+                new DiscountCalculator(),
+                new SupportFeeCalculator(),
+                new PaymentFeeCalculator(),
+                new TaxCalculator());
+            _billingGateway = gateway;
+            _invoiceNotifier = new EmailInvoiceNotifier(gateway);
+        }
 
         public SubscriptionRenewalService(
             ICustomerRepository customerRepository,
             ISubscriptionPlanRepository planRepository,
             IInvoiceCalculator invoiceCalculator,
-            IBillingGateway billingGateway)
+            IBillingGateway billingGateway,
+            IInvoiceNotifier invoiceNotifier)
         {
             _customerRepository = customerRepository;
             _subscriptionPlanRepository = planRepository;
             _invoiceCalculator = invoiceCalculator;
             _billingGateway = billingGateway;
+            _invoiceNotifier = invoiceNotifier;
         }
         public RenewalInvoice CreateRenewalInvoice(
             int customerId,
@@ -58,7 +64,7 @@ namespace LegacyRenewalApp
                 throw new InvalidOperationException("Inactive customers cannot renew subscriptions");
             }
             
-            var invoiceResult = _invoiceCalculator.Calculate(customer, plan, seatCount, paymentMethod,
+            var invoiceResult = _invoiceCalculator.Calculate(customer, plan, seatCount, normalizedPaymentMethod,
                 includePremiumSupport, useLoyaltyPoints);
             
             var invoice = new RenewalInvoice
@@ -80,15 +86,7 @@ namespace LegacyRenewalApp
 
             _billingGateway.SaveInvoice(invoice);
 
-            if (!string.IsNullOrWhiteSpace(customer.Email))
-            {
-                string subject = "Subscription renewal invoice";
-                string body =
-                    $"Hello {customer.FullName}, your renewal for plan {normalizedPlanCode} " +
-                    $"has been prepared. Final amount: {invoice.FinalAmount:F2}.";
-
-                _billingGateway.SendEmail(customer.Email, subject, body);
-            }
+            _invoiceNotifier.Notify(customer, invoice);
 
             return invoice;
         }
