@@ -56,14 +56,6 @@ namespace LegacyRenewalApp
             var invoiceResult = _invoiceCalculator.Calculate(customer, plan, seatCount, paymentMethod,
                 includePremiumSupport, useLoyaltyPoints);
             
-            var baseAmount = invoiceResult.BaseAmount;
-            var discountAmount = invoiceResult.DiscountAmount;
-            var supportFee = invoiceResult.SupportFee;
-            var paymentFee = invoiceResult.PaymentFee;
-            var taxAmount = invoiceResult.TaxAmount;
-            var finalAmount = invoiceResult.FinalAmount;
-            var notes = invoiceResult.Notes;
-            
             var invoice = new RenewalInvoice
             {
                 InvoiceNumber = $"INV-{DateTime.UtcNow:yyyyMMdd}-{customerId}-{normalizedPlanCode}",
@@ -71,13 +63,13 @@ namespace LegacyRenewalApp
                 PlanCode = normalizedPlanCode,
                 PaymentMethod = normalizedPaymentMethod,
                 SeatCount = seatCount,
-                BaseAmount = Math.Round(baseAmount, 2, MidpointRounding.AwayFromZero),
-                DiscountAmount = Math.Round(discountAmount, 2, MidpointRounding.AwayFromZero),
-                SupportFee = Math.Round(supportFee, 2, MidpointRounding.AwayFromZero),
-                PaymentFee = Math.Round(paymentFee, 2, MidpointRounding.AwayFromZero),
-                TaxAmount = Math.Round(taxAmount, 2, MidpointRounding.AwayFromZero),
-                FinalAmount = Math.Round(finalAmount, 2, MidpointRounding.AwayFromZero),
-                Notes = notes.Trim(),
+                BaseAmount = Math.Round(invoiceResult.BaseAmount, 2, MidpointRounding.AwayFromZero),
+                DiscountAmount = Math.Round(invoiceResult.DiscountAmount, 2, MidpointRounding.AwayFromZero),
+                SupportFee = Math.Round(invoiceResult.SupportFee, 2, MidpointRounding.AwayFromZero),
+                PaymentFee = Math.Round(invoiceResult.PaymentFee, 2, MidpointRounding.AwayFromZero),
+                TaxAmount = Math.Round(invoiceResult.TaxAmount, 2, MidpointRounding.AwayFromZero),
+                FinalAmount = Math.Round(invoiceResult.FinalAmount, 2, MidpointRounding.AwayFromZero),
+                Notes = invoiceResult.Notes.Trim(),
                 GeneratedAt = DateTime.UtcNow
             };
 
