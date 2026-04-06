@@ -1,4 +1,5 @@
 using System;
+using LegacyRenewalApp.BillingGateways;
 using LegacyRenewalApp.Calculators;
 using LegacyRenewalApp.Interfaces;
 using LegacyRenewalApp.Models;
@@ -11,6 +12,7 @@ namespace LegacyRenewalApp
         private readonly ICustomerRepository _customerRepository;
         private readonly ISubscriptionPlanRepository _subscriptionPlanRepository;
         private readonly IInvoiceCalculator _invoiceCalculator;
+        private readonly IBillingGateway _billingGateway;
 
         public SubscriptionRenewalService()
             : this(
@@ -20,17 +22,20 @@ namespace LegacyRenewalApp
                     new DiscountCalculator(),
                     new SupportFeeCalculator(),
                     new PaymentFeeCalculator(),
-                    new TaxCalculator()))
+                    new TaxCalculator()), 
+                    new BillingGatewayWrapper())
         { }
 
         public SubscriptionRenewalService(
             ICustomerRepository customerRepository,
             ISubscriptionPlanRepository planRepository,
-            IInvoiceCalculator invoiceCalculator)
+            IInvoiceCalculator invoiceCalculator,
+            IBillingGateway billingGateway)
         {
             _customerRepository = customerRepository;
             _subscriptionPlanRepository = planRepository;
             _invoiceCalculator = invoiceCalculator;
+            _billingGateway = billingGateway;
         }
         public RenewalInvoice CreateRenewalInvoice(
             int customerId,
@@ -73,7 +78,7 @@ namespace LegacyRenewalApp
                 GeneratedAt = DateTime.UtcNow
             };
 
-            LegacyBillingGateway.SaveInvoice(invoice);
+            _billingGateway.SaveInvoice(invoice);
 
             if (!string.IsNullOrWhiteSpace(customer.Email))
             {
@@ -82,7 +87,7 @@ namespace LegacyRenewalApp
                     $"Hello {customer.FullName}, your renewal for plan {normalizedPlanCode} " +
                     $"has been prepared. Final amount: {invoice.FinalAmount:F2}.";
 
-                LegacyBillingGateway.SendEmail(customer.Email, subject, body);
+                _billingGateway.SendEmail(customer.Email, subject, body);
             }
 
             return invoice;
