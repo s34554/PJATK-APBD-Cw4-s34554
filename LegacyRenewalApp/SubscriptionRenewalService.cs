@@ -4,6 +4,30 @@ namespace LegacyRenewalApp
 {
     public class SubscriptionRenewalService
     {
+        private readonly ICustomerRepository _customerRepository;
+        private readonly ISubscriptionPlanRepository _subscriptionPlanRepository;
+        private readonly IInvoiceCalculator _invoiceCalculator;
+
+        public SubscriptionRenewalService()
+            : this(
+                new CustomerRepository(),
+                new SubscriptionPlanRepository(),
+                new InvoiceCalculator(
+                    new DiscountCalculator(),
+                    new SupportFeeCalculator(),
+                    new PaymentFeeCalculator(),
+                    new TaxCalculator()))
+        { }
+
+        public SubscriptionRenewalService(
+            ICustomerRepository customerRepository,
+            ISubscriptionPlanRepository planRepository,
+            IInvoiceCalculator invoiceCalculator)
+        {
+            _customerRepository = customerRepository;
+            _subscriptionPlanRepository = planRepository;
+            _invoiceCalculator = invoiceCalculator;
+        }
         public RenewalInvoice CreateRenewalInvoice(
             int customerId,
             string planCode,
@@ -14,27 +38,18 @@ namespace LegacyRenewalApp
         {
             ValidateInputs(customerId, planCode, seatCount, paymentMethod);
 
-            string normalizedPlanCode = planCode.Trim().ToUpperInvariant();
-            string normalizedPaymentMethod = paymentMethod.Trim().ToUpperInvariant();
+            var normalizedPlanCode = planCode.Trim().ToUpperInvariant();
+            var normalizedPaymentMethod = paymentMethod.Trim().ToUpperInvariant();
 
-            var customerRepository = new CustomerRepository();
-            var planRepository = new SubscriptionPlanRepository();
-
-            var customer = customerRepository.GetById(customerId);
-            var plan = planRepository.GetByCode(normalizedPlanCode);
+            var customer = _customerRepository.GetById(customerId);
+            var plan = _subscriptionPlanRepository.GetByCode(normalizedPlanCode);
 
             if (!customer.IsActive)
             {
                 throw new InvalidOperationException("Inactive customers cannot renew subscriptions");
             }
             
-            IInvoiceCalculator invoiceCalculator = new InvoiceCalculator(
-                new DiscountCalculator(),
-                new SupportFeeCalculator(),
-                new PaymentFeeCalculator(),
-                new TaxCalculator()
-                );
-            InvoiceResult invoiceResult = invoiceCalculator.Calculate(customer, plan, seatCount, paymentMethod,
+            var invoiceResult = _invoiceCalculator.Calculate(customer, plan, seatCount, paymentMethod,
                 includePremiumSupport, useLoyaltyPoints);
             
             var baseAmount = invoiceResult.BaseAmount;
