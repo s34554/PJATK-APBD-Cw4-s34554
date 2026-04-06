@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using LegacyRenewalApp.Interfaces;
+using LegacyRenewalApp.Models;
 
-namespace LegacyRenewalApp
+namespace LegacyRenewalApp.Repositories
 {
     public class CustomerRepository : ICustomerRepository
     {

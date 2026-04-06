@@ -1,6 +1,8 @@
 ﻿using System;
+using LegacyRenewalApp.Interfaces;
+using LegacyRenewalApp.Models;
 
-namespace LegacyRenewalApp;
+namespace LegacyRenewalApp.Calculators;
 
 public class PaymentFeeCalculator : IPaymentFeeCalculator
 {

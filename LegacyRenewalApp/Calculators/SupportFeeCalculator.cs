@@ -1,4 +1,7 @@
-﻿namespace LegacyRenewalApp;
+﻿using LegacyRenewalApp.Interfaces;
+using LegacyRenewalApp.Models;
+
+namespace LegacyRenewalApp.Calculators;
 
 public class SupportFeeCalculator : ISupportFeeCalculator
 {

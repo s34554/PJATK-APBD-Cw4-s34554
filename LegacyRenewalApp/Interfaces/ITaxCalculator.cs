@@ -1,4 +1,6 @@
-﻿namespace LegacyRenewalApp;
+﻿using LegacyRenewalApp.Models;
+
+namespace LegacyRenewalApp.Interfaces;
 
 public interface ITaxCalculator
 {

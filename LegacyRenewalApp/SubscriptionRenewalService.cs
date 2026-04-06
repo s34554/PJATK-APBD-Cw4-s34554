@@ -1,4 +1,8 @@
 using System;
+using LegacyRenewalApp.Calculators;
+using LegacyRenewalApp.Interfaces;
+using LegacyRenewalApp.Models;
+using LegacyRenewalApp.Repositories;
 
 namespace LegacyRenewalApp
 {
